@@ -64,7 +64,7 @@ with open('./eData.json', 'w') as f:
                 emailInfo['date'] = msg.headers['Date']
                 emailInfo['to'] = msg.headers['To']
                 emailInfo['cc'] = msg.headers['Cc']
-                emailInfo['body'] = msg.parts[0].body
+                #emailInfo['body'] = msg.parts[0].body
                 a.encode('ascii', 'replace')
                 tBlob = tb(a)
                 words = {}
