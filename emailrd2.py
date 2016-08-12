@@ -53,9 +53,12 @@ with open('./eData.json', 'w') as f:
         #print type(msg2)
         if msg2.is_multipart():
             for payload in msg2.get_payload():
+                if type(payload.get_payload())==list:
+                    continue
                 if payload.get_payload(decode=True) is None:
                     continue
                 else:
+                    print type(payload.get_payload())
                     raw = BeautifulSoup(payload.get_payload(decode=True), 'lxml').get_text()
                 #print raw
         else:
@@ -63,7 +66,7 @@ with open('./eData.json', 'w') as f:
             raw = BeautifulSoup(payload.get_payload(decode=True), 'lxml').get_text()
 
         links = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', raw)
-        #print msg2['Date']
+        print msg2['Date']
         #text, sign = signature.extract(raw, msg2['From'])
         #print text
         #print type(sign)
