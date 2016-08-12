@@ -1,1 +1,0 @@
-This is a sample file containing some text. This will be used to check whether the email module is working
