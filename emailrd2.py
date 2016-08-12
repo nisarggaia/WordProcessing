@@ -4,12 +4,12 @@ import email as em2
 import json
 import nltk
 import re
-import base64
+#import base64
 from talon import signature
-import talon
+#import talon
 from bs4 import BeautifulSoup
 
-talon.init()
+#talon.init()
 
 def clean_html(html):
     # First we remove inline JavaScript/CSS:
@@ -56,19 +56,13 @@ with open('./eData.json', 'w') as f:
                 if payload.get_payload(decode=True) is None:
                     continue
                 else:
-                #raw = clean_html(payload.get_payload(decode=True))
-                    raw = BeautifulSoup(payload.get_payload(decode=True), 'html.parser').get_text()
+                    raw = BeautifulSoup(payload.get_payload(decode=True), 'lxml').get_text()
                 #print raw
         else:
             #raw = BeautifulSoup(msg2.get_payload(decode=True), 'html.parser').get_text()
             raw = BeautifulSoup(payload.get_payload(decode=True), 'lxml').get_text()
 
-        #print type(raw)
-        #links = re.findall(r'(http.*?)', raw)
         links = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', raw)
-        #if links:
-        #    for link in links:
-         #       print type(link)
         #print msg2['Date']
         #text, sign = signature.extract(raw, msg2['From'])
         #print text
@@ -81,7 +75,7 @@ with open('./eData.json', 'w') as f:
             if word[1] == 'NNP':
                 eWords[i] = word[0]
                 i=i+1
-                print word[0]
+                #print word[0]
         #print len(eWords)
         eLinks = {}
         if links:
