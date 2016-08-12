@@ -5,20 +5,25 @@ import json
 import nltk
 import re
 import base64
+from talon import signature
+import talon
 from bs4 import BeautifulSoup
+
+talon.init()
 
 def clean_html(html):
     # First we remove inline JavaScript/CSS:
     cleaned = re.sub(r"(?is)<(script|style).*?>.*?(</\1>)", "", html.strip())
     # Then we remove html comments. This has to be done before removing regular
     # tags since comments can contain '>' characters.
-    cleaned = re.sub(r"(?s)<!--(.*?)-->[\n]?", "", cleaned)
+    cleaned = re.sub(r"(?s)<!--(.*?)-->?", "", cleaned)
     # Next we can remove the remaining tags:
     cleaned = re.sub(r"(?s)<.*?>", " ", cleaned)
     # Finally, we deal with whitespace
     cleaned = re.sub(r"&nbsp;", " ", cleaned)
     cleaned = re.sub(r"  ", " ", cleaned)
     cleaned = re.sub(r"  ", " ", cleaned)
+    cleaned = re.sub(r"[+|@]", " ", cleaned)
     return cleaned.strip()
 
 # Connecting to IMAP Server and logging in
@@ -29,11 +34,12 @@ M.login(email, password)
 M.select()
 
 # Searching/Fetching the emails from the inbox
-typ, data = M.search(None, 'SUBJECT', "Welcome!")
+#typ, data = M.search(None, 'SUBJECT', "latest activity")
+typ, data = M.search(None, "ALL")
 
 # Storing the information from the email. From, To, Date, CC, Body and Word Count in the body
 emailDict = {}
-with open('./eData2.json', 'w') as f:
+with open('./eData.json', 'w') as f:
     for num in data[0].split():
         emailInfo = {}
         typ, data = M.fetch(num, '(RFC822)')
@@ -44,21 +50,51 @@ with open('./eData2.json', 'w') as f:
         n = int(num)
         n = n-1
         #print n
+        #print type(msg2)
         if msg2.is_multipart():
             for payload in msg2.get_payload():
-                raw = BeautifulSoup(payload.get_payload(decode=True), 'html.parser').get_text()
+                if payload.get_payload(decode=True) is None:
+                    continue
+                else:
+                #raw = clean_html(payload.get_payload(decode=True))
+                    raw = BeautifulSoup(payload.get_payload(decode=True), 'html.parser').get_text()
                 #print raw
         else:
-            raw = BeautifulSoup(msg2.get_payload(decode=True), 'html.parser').get_text()
+            #raw = BeautifulSoup(msg2.get_payload(decode=True), 'html.parser').get_text()
+            raw = BeautifulSoup(payload.get_payload(decode=True), 'lxml').get_text()
+
+        #print type(raw)
+        #links = re.findall(r'(http.*?)', raw)
+        links = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', raw)
+        #if links:
+        #    for link in links:
+         #       print type(link)
+        #print msg2['Date']
+        #text, sign = signature.extract(raw, msg2['From'])
+        #print text
+        #print type(sign)
         tokens = nltk.word_tokenize(raw)
         posTag = nltk.pos_tag(tokens)
+        eWords = {}
+        i=0
         for word in posTag:
             if word[1] == 'NNP':
+                eWords[i] = word[0]
+                i=i+1
                 print word[0]
+        #print len(eWords)
+        eLinks = {}
+        if links:
+            j=0
+            for link in links:
+                eLinks[j] = link[0]
+                j = j+1
         emailInfo['from'] = msg2['From']
         emailInfo['date'] = msg2['Date']
         emailInfo['to'] = msg2['To']
         emailInfo['cc'] = msg2['Cc']
+        emailInfo['Links'] = eLinks
+        emailInfo['Words'] = eWords
         emailDict[n] = emailInfo
         print '-----------------------------------------------------------------------------'
 
